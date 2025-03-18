@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HVAC Duct Sizing Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .calculator-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .calculator-title {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .parameters-section {
+      background-color: #f8f8f8;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      margin-top: 0;
+      color: #333;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+
+    .parameters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .parameter-item {
+      margin-bottom: 15px;
+    }
+
+    .parameter-item label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .parameter-item input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .button-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .reset-button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .reset-button:hover {
+      background-color: #45a049;
+    }
+
+    .ducts-section {
+      margin-bottom: 30px;
+    }
+
+    .rectangular-table-container {
+      overflow-x: auto;
+      margin-bottom: 15px;
+    }
+
+    .rectangular-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .rectangular-table th,
+    .rectangular-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .rectangular-table th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+
+    .ducts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+    }
+
+    .duct-table-container {
+      margin-bottom: 20px;
+    }
+
+    .subsection-title {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .duct-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .duct-table th,
+    .duct-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .duct-table th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+
+    .table-notes {
+      font-size: 14px;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    .notes-section {
+      background-color: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .notes-title {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .notes-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .notes-list li {
+      margin-bottom: 8px;
+    }
+
+    /* Background color classes for airflow */
+    .bg-yellow-light {
+      background-color: #fffde7;
+    }
+
+    .bg-yellow {
+      background-color: #fff9c4;
+    }
+
+    .bg-orange-light {
+      background-color: #ffe0b2;
+    }
+
+    .bg-orange {
+      background-color: #ffcc80;
+    }
+
+    .bg-red {
+      background-color: #ffab91;
+    }
+
+    /* Media query for small screens */
+    @media screen and (max-width: 768px) {
+      .parameters-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .ducts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator-container">
+    <h1 class="calculator-title">HVAC Duct Sizing Calculator</h1>
+    
+    <!-- Parameters Section -->
+    <div class="parameters-section">
+      <h2 class="section-title">Parameters</h2>
+      <div class="parameters-grid">
+        <div class="parameter-item">
+          <label>
+            Maximum Air Velocity (m/s)
+            <input
+              type="number"
+              id="velocity"
+              value="10"
+              min="1"
+              max="20"
+              step="0.1"
+            />
+          </label>
+        </div>
+        
+        <div class="parameter-item">
+          <label>
+            Pressure Drop (Pa/m)
+            <input
+              type="number"
+              id="pressureLoss"
+              value="1.2"
+              min="0.1"
+              max="5"
+              step="0.1"
+            />
+          </label>
+        </div>
+        
+        <div class="parameter-item">
+          <label>
+            Sheet Metal Roughness (m)
+            <input
+              type="number"
+              id="roughness"
+              value="0.0001"
+              min="0.00001"
+              max="0.001"
+              step="0.00001"
+            />
+          </label>
+        </div>
+        
+        <div class="parameter-item">
+          <label>
+            Flexible Duct Factor
+            <input
+              type="number"
+              id="flexFactor"
+              value="1.5"
+              min="1"
+              max="3"
+              step="0.1"
+            />
+          </label>
+        </div>
+        
+        <div class="parameter-item">
+          <label>
+            Air Density (kg/m³)
+            <input
+              type="number"
+              id="density"
+              value="1.2"
+              min="0.8"
+              max="1.5"
+              step="0.01"
+            />
+          </label>
+        </div>
+        
+        <div class="parameter-item">
+          <label>
+            Air Kinematic Viscosity (m²/s)
+            <input
+              type="number"
+              id="viscosity"
+              value="0.000015"
+              min="0.00001"
+              max="0.0001"
+              step="0.000001"
+            />
+          </label>
+        </div>
+      </div>
+      
+      <div class="button-container">
+        <button id="resetButton" class="reset-button">
+          Reset to Defaults
+        </button>
+      </div>
+    </div>
+    
+    <!-- Rectangular Ducts Section (Now First) -->
+    <div class="ducts-section">
+      <h2 class="section-title">Rectangular Ducts - Maximum Airflow (m³/h) - Aspect Ratio ≤ 4:1</h2>
+      <div class="rectangular-table-container">
+        <table class="rectangular-table" id="rectangularTable">
+          <thead>
+            <tr>
+              <th>Width (cm) ➡<br />Height (cm) ⬇</th>
+              <!-- Headers will be dynamically added with JavaScript -->
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rows will be dynamically added with JavaScript -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="table-notes">
+        <p>* Empty cells indicate aspect ratio > 4:1 (not recommended)</p>
+        <p>* Color intensity indicates airflow rate magnitude</p>
+      </div>
+    </div>
+
+    <!-- Circular Ducts Section (Now Second) -->
+    <div class="ducts-section">
+      <h2 class="section-title">Round and Flexible Ducts</h2>
+      <div class="ducts-grid">
+        <!-- Round Ducts Table -->
+        <div class="duct-table-container">
+          <h3 class="subsection-title">Round Ducts</h3>
+          <table class="duct-table" id="roundTable">
+            <thead>
+              <tr>
+                <th>Diameter (cm)</th>
+                <th>Airflow (m³/h)</th>
+                <th>Velocity (m/s)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows will be dynamically added with JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Flexible Ducts Table -->
+        <div class="duct-table-container">
+          <h3 class="subsection-title">Flexible Ducts</h3>
+          <table class="duct-table" id="flexibleTable">
+            <thead>
+              <tr>
+                <th>Diameter (cm)</th>
+                <th>Airflow (m³/h)</th>
+                <th>Velocity (m/s)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows will be dynamically added with JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Notes Section -->
+    <div class="notes-section">
+      <h3 class="notes-title">Notes:</h3>
+      <ul class="notes-list">
+        <li>Calculations use the ASHRAE friction factor method.</li>
+        <li>The maximum allowable aspect ratio for rectangular ducts is 4:1.</li>
+        <li>Flexible duct calculations include additional resistance factor (default: 1.5).</li>
+        <li>Adjust parameters as needed for specific project requirements.</li>
+        <li>Default pressure drop value (1.2 Pa/m) has been calibrated to match typical industry values.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Parameters state
+    let parameters = {
+      velocity: 10,
+      pressureLoss: 1.2,
+      roughness: 0.0001,
+      flexFactor: 1.5,
+      density: 1.2,
+      viscosity: 0.000015
+    };
+
+    // Get DOM elements
+    const velocityInput = document.getElementById('velocity');
+    const pressureLossInput = document.getElementById('pressureLoss');
+    const roughnessInput = document.getElementById('roughness');
+    const flexFactorInput = document.getElementById('flexFactor');
+    const densityInput = document.getElementById('density');
+    const viscosityInput = document.getElementById('viscosity');
+    const resetButton = document.getElementById('resetButton');
+    const rectangularTable = document.getElementById('rectangularTable');
+    const roundTable = document.getElementById('roundTable');
+    const flexibleTable = document.getElementById('flexibleTable');
+
+    // Set up event listeners
+    velocityInput.addEventListener('change', handleInputChange);
+    pressureLossInput.addEventListener('change', handleInputChange);
+    roughnessInput.addEventListener('change', handleInputChange);
+    flexFactorInput.addEventListener('change', handleInputChange);
+    densityInput.addEventListener('change', handleInputChange);
+    viscosityInput.addEventListener('change', handleInputChange);
+    resetButton.addEventListener('click', resetParameters);
+
+    // Define the dimensions for rectangular ducts
+    const rectDimensions = Array.from({ length: 40 }, (_, i) => (i + 1) * 5); // 5 to 200 in 5cm increments
+    
+    // Define the dimensions for round ducts
+    const roundDiameters = [
+      80, 100, 112, 125, 140, 150, 160, 180, 200, 224, 250, 280, 300, 315, 355, 400, 450, 500, 
+      560, 630, 710, 800, 900, 1000, 1120, 1250
+    ];
+    
+    // Define the dimensions for flexible ducts
+    const flexibleDiameters = [10, 12.5, 15, 16, 18, 20, 22.4, 25, 28, 31.5, 35.5, 40, 45, 50];
+
+    // Calculate rectangular duct airflow
+    function calculateRectangularAirflow(width, height) {
+      // Convert dimensions to meters
+      const widthM = width / 100;
+      const heightM = height / 100;
+      
+      // Check aspect ratio
+      if (width / height > 4 || height / width > 4) {
+        return null;
+      }
+      
+      // Calculate area and perimeter
+      const area = widthM * heightM;
+      const perimeter = 2 * (widthM + heightM);
+      
+      // Calculate hydraulic diameter
+      const hydraulicDiameter = (4 * area) / perimeter;
+      
+      // Calculate Reynolds number
+      const reynoldsNumber = parameters.velocity * hydraulicDiameter / parameters.viscosity;
+      
+      // Calculate relative roughness
+      const relativeRoughness = parameters.roughness / hydraulicDiameter;
+      
+      // Calculate friction factor
+      let frictionFactor;
+      if (reynoldsNumber < 2000) {
+        frictionFactor = 64 / reynoldsNumber;
+      } else if (reynoldsNumber > 4000) {
+        frictionFactor = 0.11 * Math.pow((relativeRoughness + 68/reynoldsNumber), 0.25);
+      } else {
+        // Transition region
+        const f1 = 64 / 2000;
+        const f2 = 0.11 * Math.pow((relativeRoughness + 68/4000), 0.25);
+        frictionFactor = f1 + (reynoldsNumber - 2000) * (f2 - f1) / 2000;
+      }
+      
+      // Calculate max velocity from pressure loss
+      const maxVelocityFromPressure = Math.sqrt((2 * parameters.pressureLoss * hydraulicDiameter) / (frictionFactor * parameters.density));
+      
+      // Use minimum of input velocity and max velocity from pressure
+      const actualVelocity = Math.min(parameters.velocity, maxVelocityFromPressure);
+      
+      // Calculate airflow
+      const airflow = actualVelocity * area * 3600; // m³/h
+      
+      return Math.round(airflow);
+    }
+
+    // Calculate round duct airflow
+    function calculateRoundAirflow(diameter) {
+      // Convert diameter to meters
+      const diameterM = diameter / 100;
+      
+      // Calculate area
+      const area = Math.PI * Math.pow(diameterM / 2, 2);
+      
+      // For round ducts, hydraulic diameter equals actual diameter
+      const hydraulicDiameter = diameterM;
+      
+      // Calculate Reynolds number
+      const reynoldsNumber = parameters.velocity * hydraulicDiameter / parameters.viscosity;
+      
+      // Calculate relative roughness
+      const relativeRoughness = parameters.roughness / hydraulicDiameter;
+      
+      // Calculate friction factor
+      let frictionFactor;
+      if (reynoldsNumber < 2000) {
+        frictionFactor = 64 / reynoldsNumber;
+      } else if (reynoldsNumber > 4000) {
+        frictionFactor = 0.11 * Math.pow((relativeRoughness + 68/reynoldsNumber), 0.25);
+      } else {
+        // Transition region
+        const f1 = 64 / 2000;
+        const f2 = 0.11 * Math.pow((relativeRoughness + 68/4000), 0.25);
+        frictionFactor = f1 + (reynoldsNumber - 2000) * (f2 - f1) / 2000;
+      }
+      
+      // Calculate max velocity from pressure loss
+      const maxVelocityFromPressure = Math.sqrt((2 * parameters.pressureLoss * hydraulicDiameter) / (frictionFactor * parameters.density));
+      
+      // Use minimum of input velocity and max velocity from pressure
+      const actualVelocity = Math.min(parameters.velocity, maxVelocityFromPressure);
+      
+      // Calculate airflow
+      const airflow = actualVelocity * area * 3600; // m³/h
+      
+      return {
+        airflow: Math.round(airflow),
+        velocity: Math.round(actualVelocity * 10) / 10
+      };
+    }
+
+    // Calculate flexible duct airflow
+    function calculateFlexibleAirflow(diameter) {
+      // For flexible ducts, we increase roughness and add resistance factor
+      const effectiveRoughness = parameters.roughness * parameters.flexFactor;
+      
+      // Convert diameter to meters
+      const diameterM = diameter / 100;
+      
+      // Calculate area
+      const area = Math.PI * Math.pow(diameterM / 2, 2);
+      
+      // For round ducts, hydraulic diameter equals actual diameter
+      const hydraulicDiameter = diameterM;
+      
+      // Calculate Reynolds number
+      const reynoldsNumber = parameters.velocity * hydraulicDiameter / parameters.viscosity;
+      
+      // Calculate relative roughness
+      const relativeRoughness = effectiveRoughness / hydraulicDiameter;
+      
+      // Calculate friction factor
+      let frictionFactor;
+      if (reynoldsNumber < 2000) {
+        frictionFactor = 64 / reynoldsNumber;
+      } else if (reynoldsNumber > 4000) {
+        frictionFactor = 0.11 * Math.pow((relativeRoughness + 68/reynoldsNumber), 0.25);
+      } else {
+        // Transition region
+        const f1 = 64 / 2000;
+        const f2 = 0.11 * Math.pow((relativeRoughness + 68/4000), 0.25);
+        frictionFactor = f1 + (reynoldsNumber - 2000) * (f2 - f1) / 2000;
+      }
+      
+      // Calculate max velocity from pressure loss
+      const maxVelocityFromPressure = Math.sqrt((2 * parameters.pressureLoss * hydraulicDiameter) / (frictionFactor * parameters.density));
+      
+      // Apply flex factor to reduce velocity (higher resistance)
+      const flexAdjustedMaxVelocity = maxVelocityFromPressure / parameters.flexFactor;
+      
+      // Use minimum of input velocity and flex-adjusted max velocity
+      const actualVelocity = Math.min(parameters.velocity, flexAdjustedMaxVelocity);
+      
+      // Calculate airflow
+      const airflow = actualVelocity * area * 3600; // m³/h
+      
+      return {
+        airflow: Math.round(airflow),
+        velocity: Math.round(actualVelocity * 10) / 10
+      };
+    }
+
+    // Get airflow color class
+    function getAirflowColorClass(airflow) {
+      if (!airflow) return '';
+      
+      if (airflow < 500) return 'bg-yellow-light';
+      if (airflow < 1000) return 'bg-yellow';
+      if (airflow < 2000) return 'bg-orange-light';
+      if (airflow < 4000) return 'bg-orange';
+      return 'bg-red';
+    }
+
+    // Handle input change
+    function handleInputChange(e) {
+      const { id, value } = e.target;
+      parameters[id] = parseFloat(value);
+      
+      // Recalculate tables
+      generateTables();
+    }
+
+    // Reset parameters to defaults
+    function resetParameters() {
+      parameters = {
+        velocity: 10,
+        pressureLoss: 1.2,
+        roughness: 0.0001,
+        flexFactor: 1.5,
+        density: 1.2,
+        viscosity: 0.000015
+      };
+      
+      // Update input values
+      velocityInput.value = parameters.velocity;
+      pressureLossInput.value = parameters.pressureLoss;
+      roughnessInput.value = parameters.roughness;
+      flexFactorInput.value = parameters.flexFactor;
+      densityInput.value = parameters.density;
+      viscosityInput.value = parameters.viscosity;
+      
+      // Recalculate tables
+      generateTables();
+    }
+
+    // Generate rectangular table
+    function generateRectangularTable() {
+      // Clear existing table
+      const thead = rectangularTable.querySelector('thead tr');
+      const tbody = rectangularTable.querySelector('tbody');
+      
+      // Keep the first header cell and remove others
+      while (thead.children.length > 1) {
+        thead.removeChild(thead.lastChild);
+      }
+      
+      // Add width headers
+      rectDimensions.forEach(width => {
+        const th = document.createElement('th');
+        th.textContent = width;
+        thead.appendChild(th);
+      });
+      
+      // Clear tbody
+      tbody.innerHTML = '';
+      
+      // Generate rows
+      rectDimensions.forEach(height => {
+        const tr = document.createElement('tr');
+        
+        // Add height cell
+        const tdHeight = document.createElement('td');
+        tdHeight.textContent = height;
+        tr.appendChild(tdHeight);
+        
+        // Add value cells
+        rectDimensions.forEach(width => {
+          const td = document.createElement('td');
+          const airflow = calculateRectangularAirflow(width, height);
+          
+          if (airflow) {
+            td.textContent = airflow.toLocaleString();
+            td.className = getAirflowColorClass(airflow);
+          } else {
+            td.textContent = "";
+          }
+          
+          tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Generate round ducts table
+    function generateRoundTable() {
+      const tbody = roundTable.querySelector('tbody');
+      tbody.innerHTML = '';
+      
+      roundDiameters.forEach(diameter => {
+        const result = calculateRoundAirflow(diameter);
+        
+        const tr = document.createElement('tr');
+        tr.className = getAirflowColorClass(result.airflow);
+        
+        const tdDiameter = document.createElement('td');
+        tdDiameter.textContent = diameter;
+        tr.appendChild(tdDiameter);
+        
+        const tdAirflow = document.createElement('td');
+        tdAirflow.textContent = result.airflow.toLocaleString();
+        tr.appendChild(tdAirflow);
+        
+        const tdVelocity = document.createElement('td');
+        tdVelocity.textContent = result.velocity;
+        tr.appendChild(tdVelocity);
+        
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Generate flexible ducts table
+    function generateFlexibleTable() {
+      const tbody = flexibleTable.querySelector('tbody');
+      tbody.innerHTML = '';
+      
+      flexibleDiameters.forEach(diameter => {
+        const result = calculateFlexibleAirflow(diameter);
+        
+        const tr = document.createElement('tr');
+        tr.className = getAirflowColorClass(result.airflow);
+        
+        const tdDiameter = document.createElement('td');
+        tdDiameter.textContent = diameter;
+        tr.appendChild(tdDiameter);
+        
+        const tdAirflow = document.createElement('td');
+        tdAirflow.textContent = result.airflow.toLocaleString();
+        tr.appendChild(tdAirflow);
+        
+        const tdVelocity = document.createElement('td');
+        tdVelocity.textContent = result.velocity;
+        tr.appendChild(tdVelocity);
+        
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Generate all tables
+    function generateTables() {
+      generateRectangularTable();
+      generateRoundTable();
+      generateFlexibleTable();
+    }
+
+    // Initialize tables on page load
+    window.addEventListener('DOMContentLoaded', generateTables);
+  </script>
+</body>
+</html>
